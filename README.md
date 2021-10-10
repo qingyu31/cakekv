@@ -1,4 +1,4 @@
-#CAKEKV
+# CAKEKV
 
 Cake is an open-source NoSQL database compatible with REdis Serialization Protocol.
 
@@ -12,12 +12,14 @@ working on development.
 ## Road Map
 - [x] Redis client compatible
 - [x] Standalone usage
+- [ ] Redis 3.0 essential command support
 - [ ] Redis 3.0 data structure support
-  - [ ] keys
+  - [ ] strings
   - [ ] hashes
   - [ ] lists
   - [ ] sets
   - [ ] sorted sets
+  - [ ] bitmaps
 - [ ] Authorization on isolated namespace
 - [ ] Cluster usage
 - [ ] Work as redis slave

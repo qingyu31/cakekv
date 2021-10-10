@@ -32,10 +32,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "open db %v\n", err)
 		return
 	}
-	keyValue := new(datatype.Keys)
-	handler.Register("get", common.HandleFunc(keyValue.Get))
-	handler.Register("set", common.HandleFunc(keyValue.Set))
-	handler.Register("del", common.HandleFunc(keyValue.Del))
+	keys := new(datatype.Keys)
+	strings := new(datatype.Strings)
+	handler.Register("get", common.HandleFunc(strings.Get))
+	handler.Register("set", common.HandleFunc(strings.Set))
+	handler.Register("del", common.HandleFunc(keys.Del))
 	err = srv.ListenAndServe()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ListenAndServe %v\n", err)

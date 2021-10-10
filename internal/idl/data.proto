@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+option go_package = "idl";
+
+message data {
+  uint32 type = 1;
+  uint32 version = 2;
+  bytes body = 3;
+}

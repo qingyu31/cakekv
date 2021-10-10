@@ -37,8 +37,8 @@ type boltTx struct {
 	bucket *bolt.Bucket
 }
 
-func (b boltTx) Get(key []byte) ([]byte, error) {
-	val, err := b.get(key)
+func (b boltTx) Get(table, key []byte) ([]byte, error) {
+	val, err := b.get(table, key)
 	if err != nil {
 		return nil, err
 	}
@@ -48,8 +48,8 @@ func (b boltTx) Get(key []byte) ([]byte, error) {
 	return val.GetBody(), nil
 }
 
-func (b boltTx) Set(key []byte, value []byte) error {
-	val, err := b.get(key)
+func (b boltTx) Set(table, key, value []byte) error {
+	val, err := b.get(table, key)
 	if err != nil {
 		return err
 	}
@@ -57,15 +57,19 @@ func (b boltTx) Set(key []byte, value []byte) error {
 		val = new(idl.Value)
 	}
 	val.Body = value
-	return b.set(key, val)
+	return b.set(table, key, val)
 }
 
-func (b boltTx) Del(key []byte) error {
-	return b.bucket.Delete(key)
+func (b boltTx) Del(table, key []byte) error {
+	bucket, err := b.bucket.CreateBucketIfNotExists(table)
+	if err != nil {
+		return err
+	}
+	return bucket.Delete(key)
 }
 
-func (b boltTx) ExpireAt(key []byte, expireAt time.Time) error {
-	val, err := b.get(key)
+func (b boltTx) ExpireAt(table, key []byte, expireAt time.Time) error {
+	val, err := b.get(table, key)
 	if err != nil {
 		return err
 	}
@@ -73,24 +77,32 @@ func (b boltTx) ExpireAt(key []byte, expireAt time.Time) error {
 		return nil
 	}
 	val.ExpireAt = uint64(expireAt.Unix())
-	return b.set(key, val)
+	return b.set(table, key, val)
 }
 
-func (b boltTx) set(key []byte, val *idl.Value) error {
+func (b boltTx) set(table, key []byte, val *idl.Value) error {
+	bucket, err := b.bucket.CreateBucketIfNotExists(table)
+	if err != nil {
+		return err
+	}
 	result, err := proto.Marshal(val)
 	if err != nil {
 		return err
 	}
-	return b.bucket.Put(key, result)
+	return bucket.Put(key, result)
 }
 
-func (b boltTx) get(key []byte) (*idl.Value, error) {
-	val := b.bucket.Get(key)
+func (b boltTx) get(table, key []byte) (*idl.Value, error) {
+	bucket, err := b.bucket.CreateBucketIfNotExists(table)
+	if err != nil {
+		return nil, err
+	}
+	val := bucket.Get(key)
 	if val == nil {
 		return nil, nil
 	}
 	v := new(idl.Value)
-	err := proto.Unmarshal(val, v)
+	err = proto.Unmarshal(val, v)
 	if err != nil {
 		return nil, err
 	}
@@ -98,4 +110,11 @@ func (b boltTx) get(key []byte) (*idl.Value, error) {
 		return v, nil
 	}
 	return nil, b.bucket.Delete(key)
+}
+
+func (b *boltTx) Table(table []byte) *Table {
+	t := new(Table)
+	t.table = table
+	t.tx = b
+	return t
 }
